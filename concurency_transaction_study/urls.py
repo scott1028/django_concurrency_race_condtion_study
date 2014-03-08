@@ -12,4 +12,5 @@ urlpatterns = patterns('',
     url(r'^book/transaction_test', 'book.views.test_transaction'),
     url(r'^book/non_transaction_test', 'book.views.test_non_transaction'),
     url(r'^book/transaction_only_person_test', 'book.views.test_transaction_only_person'),
+    url(r'^book/transaction_only_book_test', 'book.views.test_transaction_only_book'),
 )

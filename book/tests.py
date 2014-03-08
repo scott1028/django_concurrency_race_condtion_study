@@ -16,7 +16,8 @@ class ConcurrencyRequestTestCase(TransactionTestCase):
         row2 = person.objects.create(name='first_row')
         self.transaction_uri = '/book/transaction_test/'
         self.non_transaction_uri = '/book/non_transaction_test/'
-        self.non_transaction_person_uri = '/book/transaction_only_person_test/'
+        self.transaction_book_uri = '/book/transaction_only_book_test/'
+        self.transaction_person_uri = '/book/transaction_only_person_test/'
 
     def get_uri(self, url):
         resp = self.client.get(url)
@@ -34,11 +35,11 @@ class ConcurrencyRequestTestCase(TransactionTestCase):
         for i in th:i.join()
 
         self.assertEqual(book.objects.first().version, 50)
-        self.assertEqual(person.objects.first().version, 50)
+        self.assertEqual(person.objects.first().version, 95)
 
         print
         print 'In Transaction Condition:'
-        print 'Expect Value: ',50, 50
+        print 'Expect Value: ',50, 95
         print 'Current Value: ',book.objects.first().version, person.objects.first().version
         print
 
@@ -66,24 +67,54 @@ class ConcurrencyRequestTestCase(TransactionTestCase):
         th = []
         for i in range(0, 50):
             if i % 7 == 0:
-                # 8 Times, book+8, person+8
+                # 8 Times, book+8, person+17 (0:10, 1~7:7, total:17)
                 th.append(
                     threading.Thread(
                         target=self.get_uri,
                         args=(self.transaction_uri,))
                 )
             else:
-                # 42 Times, person-42
+                # 42 Times, book+42
                 th.append(
                     threading.Thread(
                         target=self.get_uri,
-                        args=(self.non_transaction_person_uri,))
+                        args=(self.transaction_book_uri,))
                 )
         for i in th:i.start()
         for i in th:i.join()
 
-        self.assertEqual(book.objects.first().version, 8)
-        self.assertEqual(person.objects.first().version, -34)
+        self.assertEqual(book.objects.first().version, 50) # 50
+        self.assertEqual(person.objects.first().version, 17) # 17
+
+        print
+        print 'Book Current Value: ', book.objects.first().version
+        print 'Person Current Value: ', person.objects.first().version
+        print
+
+    def test_mix_uri_mutli_thread_get_test2(self):
+        th = []
+        for i in range(0, 50):
+            if i % 7 == 0:
+                # 8 Times, book+8, person+17 (0:10, 1~7:7, total:17)
+                th.append(
+                    threading.Thread(
+                        target=self.get_uri,
+                        args=(self.transaction_uri,))
+                )
+            else:
+                # 42 Times, book+42
+                th.append(
+                    threading.Thread(
+                        target=self.get_uri,
+                        args=(self.transaction_person_uri,))
+                )
+        for i in th:i.start()
+        for i in th:i.join()
+
+        self.assertEqual(book.objects.first().version, 8) # 8
+
+        # 這情況下 persion value of the person 是無法預測的, 因為他是 -1 邏輯可能會讓 book 的 +10 邏輯重復觸發
+        # self.assertEqual(person.objects.first().version, 17)
 
         print
         print 'Book Current Value: ', book.objects.first().version
