@@ -30,7 +30,14 @@ class AnimalTestCase(TransactionTestCase):
             )
         for i in th:i.start()
         for i in th:i.join()
+
         self.assertEqual(book.objects.first().version, 50)
+
+        print
+        print 'In Transaction Condition:'
+        print 'Expect Value: ',50
+        print 'Current Value: ',book.objects.first().version
+        print
 
     def test_multi_thread_ger_book_by_non_transaction(self):
         th = []
@@ -43,8 +50,10 @@ class AnimalTestCase(TransactionTestCase):
         for i in th:i.start()
         for i in th:i.join()
 
-        print 'In Concurrency Transaction Condition:'
+        self.assertNotEqual(book.objects.first().version, 50)
+
+        print
+        print 'In Concurrency with Race Condition:'
         print 'Expect Value: ',50
         print 'Current Value: ',book.objects.first().version
-
-        self.assertNotEqual(book.objects.first().version, 50)
+        print
