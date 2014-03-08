@@ -10,7 +10,7 @@ from book.models import book
 
 
 # Create your tests here.
-class AnimalTestCase(TransactionTestCase):
+class ConcurrencyRequestTestCase(TransactionTestCase):
     def setUp(self):
         row = book.objects.create(label='first_row')
         self.transaction_uri = '/book/transaction_test/'
