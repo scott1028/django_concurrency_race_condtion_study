@@ -4,3 +4,7 @@ from django.db import models
 class book(models.Model):
 	label = models.CharField(max_length=30)
 	version = models.IntegerField(default=0)
+
+class person(models.Model):
+	name = models.CharField(max_length=100)
+	version = models.IntegerField(default=0)

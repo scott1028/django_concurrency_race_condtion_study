@@ -6,7 +6,7 @@ from django.db import transaction
 # Create your views here.
 from django.http import HttpResponse
 
-from book.models import book
+from book.models import book, person
 
 # 不會出現 Race Condition
 def test_transaction(request):
@@ -19,6 +19,9 @@ def test_transaction(request):
             # MySQLdb 套件遇到 Transaction Concurrency 將拋 Dead Lock Error！
             with transaction.atomic():
                 row = book.objects.first()
+                row.version += 1
+                row.save()
+                row = person.objects.first()
                 row.version += 1
                 row.save()
                 break
@@ -37,5 +40,27 @@ def test_non_transaction(request):
     row = book.objects.first()
     row.version += 1
     row.save()
+    row = person.objects.first()
+    row.version += 1
+    row.save()
+
+    return res
+
+# Transaction 另一個 Model
+def test_transaction_only_person(request):
+    # build a response for cookie operation.    
+    res=HttpResponse('Thanks for your comment with person!')
+
+    while True:
+        try:
+            # 當發生 Dead Lock 的時候再存一次
+            # MySQLdb 套件遇到 Transaction Concurrency 將拋 Dead Lock Error！
+            with transaction.atomic():
+                row = person.objects.first()
+                row.version -= 1
+                row.save()
+                break
+        except Exception:
+            pass
 
     return res
