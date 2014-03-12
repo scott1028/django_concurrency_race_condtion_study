@@ -1,5 +1,8 @@
 # coding: utf-8
 
+import time
+
+from django.core.cache import cache
 from django.shortcuts import render
 from django.db import transaction
 
@@ -10,26 +13,37 @@ from book.models import book, person
 
 # 不會出現 Race Condition
 def test_transaction(request):
-    # build a response for cookie operation.    
-    res=HttpResponse('Thanks for your comment!')
+    # build a response for cookie operation.
 
-    while True:
-        try:
-            # 當發生 Dead Lock 的時候再存一次
-            # MySQLdb 套件遇到 Transaction Concurrency 將拋 Dead Lock Error！
-            with transaction.atomic():
-                row = book.objects.first()
-                row.version += 1
-                row.save()
-                row = person.objects.first()
-                if row.version%20 == 0:
-                    row.version +=10
-                else:
-                    row.version += 1
-                row.save()
-                break
-        except Exception:
-            pass
+    # 展現 Django Cache 機制的運用, 可以提供給另一個 Request 提取！
+    msg = cache.get('msg')
+    if msg is None:
+        # 代表 5 秒後刪除這個 cache, 簡單來說時間只會以 5 秒差距來更新！
+        cache.set('msg', 'Thanks for your comment! at '+time.ctime(), 5)
+        msg = cache.get('msg')
+        print 'set to cache and get it.'
+    else:
+        print 'get from cache(build from pre-request).'
+
+    res=HttpResponse(msg)
+
+    # while True:
+    #     try:
+    #         # 當發生 Dead Lock 的時候再存一次
+    #         # MySQLdb 套件遇到 Transaction Concurrency 將拋 Dead Lock Error！
+    with transaction.atomic():
+        row = book.objects.first()
+        row.version += 1
+        row.save()
+        row = person.objects.first()
+        if row.version%20 == 0:
+            row.version +=10
+        else:
+            row.version += 1
+        row.save()
+                # break
+        # except Exception:
+        #     pass
 
     # Person 加法展開分析：
     # 1      10

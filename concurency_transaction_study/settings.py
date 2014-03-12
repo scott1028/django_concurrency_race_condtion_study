@@ -59,21 +59,22 @@ WSGI_APPLICATION = 'concurency_transaction_study.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # }
+    # SQLite 預設就是 Serilizable Mode
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': '127.0.0.1',
-        'NAME': 'scott',
-        'USER': 'root',
-        'PASSWORD': '',
-        'OPTIONS': {
-            # 修改 MySQL 的 Isolation Level
-            'init_command': 'SET storage_engine=INNODB; SET GLOBAL TRANSACTION ISOLATION LEVEL SERIALIZABLE;'
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'HOST': '127.0.0.1',
+    #     'NAME': 'scott',
+    #     'USER': 'root',
+    #     'PASSWORD': '',
+    #     'OPTIONS': {
+    #         # 修改 MySQL 的 Isolation Level
+    #         'init_command': 'SET storage_engine=INNODB; SET GLOBAL TRANSACTION ISOLATION LEVEL SERIALIZABLE;'
+    #     }
+    # }
 }
 
 # Internationalization
